@@ -1,7 +1,7 @@
 from sqlmodel import Session, select
 from init_db import engine, init_db
-from populate_db import creer_liste_personnes
-from models import Membre
+# from populate_db import creer_liste_personnes
+from models import *
 
 
 
@@ -57,12 +57,15 @@ def delete(table, condition) :
 
 
 
+selectionner_donnees(Cours)
 
-if __name__ == "__main__" : 
-    num_people_to_create = 25
-    fake_people = creer_liste_personnes(num_people_to_create)
-    for person in fake_people:
-        inserer_donnees(person)
+
+
+# if __name__ == "__main__" : 
+#     num_people_to_create = 25
+#     # fake_people = creer_liste_personnes(num_people_to_create)
+#     for person in fake_people:
+#         inserer_donnees(person)
 
     
 

@@ -2,6 +2,7 @@ import streamlit as st
 import sqlite3
 from sqlmodel import Field, Session, SQLModel, create_engine, select 
 from sqlalchemy import select, engine
+from utils import *
 
 connection = sqlite3.connect("salle_de_sport.db") 
 cursor = connection.cursor()
@@ -13,46 +14,34 @@ choix = st.sidebar.radio("Choisissez une rubrique :", ["Consulter les cours disp
 
 
 
-class Base(Decl)
-
 
 def display():
     if choix == "Consulter les cours disponibles":
         st.title("Cours disponibles")
 
+        selectionner_donnees(Cours)
 
-
-        # def selectionner_donnees(cours):
-        #     with Session(engine) as session :
-        #         requete = select(cours)
-        #         resultats = session.exec(requete)
-        #         return resultats.all()
-            
-        #     selectionner_donnees(cours)
-        
-
-        with Session(engine) as session :
-            cours = session.exec(cours).all()
-            for e in cours : 
-                print(f"{e.id}")
-
-
-        
-
-        
-
-
-
-
- 
     
-        
-
-
-
-
     elif choix == "S'inscrire à un cours":
-        pass
+        st.title("S'inscire à un cours")
+
+        inserer_donnees(Cours)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     elif choix == "Annuler une inscription":
         pass
     elif choix == "Consulter l'historique des inscriptions":
