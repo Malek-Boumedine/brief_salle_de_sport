@@ -44,38 +44,31 @@ class CarteAcces(SQLModel, table=True):
     def non_vide(cls, valeur) : 
         if valeur is None or not valeur : 
             raise ValueError("le 'numero_unique' ne doit pas être vide")
+        return valeur
 
 
 ##########################################################################################
 
 class Coach(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    id_sport : int | None = Field(default=None, foreign_key="sport.id")
     prenom : str | None = Field(nullable=False)
     nom : str | None = Field(nullable=False)
-    # genre : bool | None = Field(default=None, nullable=False)
+    sport : str | None
     genre: str | None = Field(default=None, nullable=False)
     date_naissance : date | None = Field(default=None, nullable=False)
     email : str | None = Field(default=None, nullable=False, unique=True)
     telephone : str | None = Field(default=None, nullable=False, unique=True)
-    
-    
-##########################################################################################
-
-class Sport(SQLModel, table=True):
-    id: int | None = Field(default=None, primary_key=True)
-    libelle : str | None = Field(default=None, nullable=False)
 
 
 ##########################################################################################
 
 class Cours(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
-    id_sport : int | None = Field(default=None, foreign_key="sport.id", ondelete="CASCADE")
+    sport : str | None
     horaire : datetime | None = Field(nullable=False)
     capacite_max : int | None = Field(nullable=False)
     nombre_inscrits : int | None = Field(nullable=False)
-    coach_id : int | None = Field(default=None, foreign_key="coach.id", ondelete="CASCADE")
+    coach_id : int | None = Field(default=None, foreign_key="coach.id")
     inscriptions: List["Inscription"] = Relationship(back_populates="cours")
 
 
@@ -86,7 +79,7 @@ class Inscription(SQLModel, table=True):
     id_membre : int | None = Field(default=None, foreign_key="membre.id", ondelete="CASCADE")
     id_cours : int| None = Field(default=None, foreign_key="cours.id", ondelete="CASCADE")
     date_inscription : date | None = Field(nullable=False)
-    membre: list["Membre"] = Relationship(back_populates="inscriptions")
+    membre: Membre = Relationship(back_populates="inscriptions")
     cours: Cours = Relationship(back_populates="inscriptions")
 
 
