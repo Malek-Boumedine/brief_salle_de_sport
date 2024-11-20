@@ -20,12 +20,13 @@ def creer_personne():
     date_naissance = fake.date_of_birth(minimum_age=18, maximum_age=80)
     email = f"{prenom.lower()}.{nom.lower()}@{fake.free_email_domain()}"
     telephone = fake.phone_number()
+    # id_carteAcces = 
 
     return {
         "prenom": prenom,
         "nom": nom,
         "genre": genre,
-        "date_naissance": date_naissance.strftime("%d-%m-%Y"),  # Format date as DD-MM-YYYY
+        "date_naissance": date_naissance,
         "email": email,
         "telephone": telephone,
     }
@@ -57,7 +58,7 @@ def creer_coach():
         "prenom": prenom,
         "nom": nom,
         "genre": genre,
-        "date_naissance": date_naissance.strftime("%Y-%m-%d"),
+        "date_naissance": date_naissance,
         "email": email,
         "telephone": telephone,
         "id_sport": id_sport,
@@ -98,28 +99,19 @@ def creer_inscription():
     return {
         "id_membre": id_membre,
         "id_cours": id_cours,
-        "date_inscription": date_inscription.strftime("%Y-%m-%d"),
+        "date_inscription": date_inscription,
     }
 
 ########################################################################
 
-def creer_liste_personnes(nombre_personnes : int=10):
-    people = []
-    for _ in range(nombre_personnes):
-        people.append(creer_personne())
-    return people
-
-########################################################################
 
 if __name__ == "__main__" : 
     
-    num_people_to_create = 3
-    fake_people = creer_liste_personnes(num_people_to_create)
-
-    for person in fake_people:
-        print(person)
-    print(("="*20))
     
+    for _ in range(3):
+        print(creer_personne())
+    print(("="*20))
+
     for i in range(3) :
         print(creer_carte_acces())
     print(("="*20))
