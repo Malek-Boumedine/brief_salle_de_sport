@@ -1,3 +1,4 @@
 .venv/
 AUTRES/
 __pycache__
+test.py
