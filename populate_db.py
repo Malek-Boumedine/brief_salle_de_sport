@@ -1,7 +1,8 @@
 from faker import Faker
 import random
-from datetime import datetime, timedelta
+from datetime import datetime
 from models import Coach
+import radar
 
 fake = Faker('fr_FR')  
 
@@ -82,8 +83,18 @@ def creer_coach(liste_sports):
 ########################################################################
 
 def creer_cours(liste_coachs : list["Coach"]):
-    
-    horaire = fake.date_time().replace(microsecond=0)
+
+    annee = 2024
+    mois = random.randint(1,12)
+    if mois in [1,3,5,7,8,10,12] : 
+        jour = random.randint(1,31)
+    elif mois in [4,6,9,11] : 
+        jour = random.randint(1,30)
+    else :
+        jour = random.randint(1,28)
+    heure = random.randint(9,17)
+        
+    horaire = datetime(annee, mois, jour, heure, 00, 00)
     capacite_max = random.randint(20, 30)  # Capacité maximale entre 20 et 30
     nombre_inscrits = random.randint(0, capacite_max)  # Nombre d'inscrits ne peut pas dépasser la capacité
     coach = random.choice(liste_coachs)
@@ -92,12 +103,14 @@ def creer_cours(liste_coachs : list["Coach"]):
 
     return {
         "sport": sport,
-        "horaire": horaire,
+        "horaire" : horaire,
         "capacite_max": capacite_max,
         "nombre_inscrits": nombre_inscrits,
         "coach_id" : coach_id
     }
 
+# date
+# heure au lieu de horaire
 
 ########################################################################
 

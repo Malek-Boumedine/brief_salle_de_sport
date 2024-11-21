@@ -33,10 +33,8 @@ def nouveau_form(args) :
     return None
 
 
-######################################################################
-
 def modifier_form(coach_data):
-    with st.form("modifier_form"):
+    with st.form("modifier_coach"):
         valeurs = {}
         # champs = [champ for champ in coach_data.keys()]
         for champ in coach_data.keys():
@@ -65,9 +63,7 @@ def modifier_form(coach_data):
             return valeurs
     return None
 
-######################################################################
-
-def supprimer_entree(nom_classe, db_index) :
+def supprimer_entree(donnee_df, index_selection, db_index) :
     if 'boutons_confirmation' not in st.session_state:
         st.session_state.boutons_confirmation = False
     if st.button("Supprimer", key="bouton_suprimer"):
@@ -75,12 +71,12 @@ def supprimer_entree(nom_classe, db_index) :
         st.session_state.afficher_form_modifier = False
         st.session_state.boutons_confirmation = True
     if st.session_state.boutons_confirmation:
-        st.warning("Voulez-vous Confirmer la suppression?")
+        st.warning(f"Voulez-vous vraiment supprimer {donnee_df.loc[index_selection, 'prenom']} {donnee_df.loc[index_selection, 'nom']} ?")
         col1, col2 = st.columns(2)
         with col1:
             if st.button("Oui", key="confirm_yes"):
-                supprimer_donnee(nom_classe, db_index)
-                st.success("Suppression réussie.")
+                supprimer_donnee(Coach, db_index)
+                st.success(f"{donnee_df.loc[index_selection, 'prenom']} {donnee_df.loc[index_selection, 'nom']} a été supprimé.")
                 time.sleep(2)
                 st.session_state.boutons_confirmation = False
                 st.rerun()
@@ -89,44 +85,19 @@ def supprimer_entree(nom_classe, db_index) :
                 st.session_state.boutons_confirmation = False
                 st.rerun()
 
-######################################################################
 
-if 'afficher_form_ajout' not in st.session_state:
-    st.session_state.afficher_form_ajout = False
-    
-if 'afficher_form_modifier' not in st.session_state:
-    st.session_state.afficher_form_modifier = False
-
-def accueil() : 
-    st.title("Interface administrateur")
-    st.markdown("""
-    L'interface administrateur offre une gestion complète des activités liées aux coachs et aux cours.
-
-    **Les principales fonctionnalités incluent :**
-
-    • La possibilité d'ajouter, de modifier ou de supprimer des coachs, garantissant ainsi une équipe dynamique et adaptée aux besoins des membres.
-
-    • La gestion des cours, permettant aux administrateurs d'effectuer des modifications ou des suppressions selon les exigences.
-
-    • La visualisation des membres inscrits à chaque cours, facilitant ainsi le suivi des participations.
-
-    • La possibilité d'annuler une inscription ou un cours, assurant une flexibilité optimale dans la gestion des activités.
-    """)    
-
-######################################################################
-
-def gestion(nom_classe, liste_champs) : 
-    st.header(f"Gérer les {nom_classe.__str__()}")
+def gestion(nom_classe : str, liste_champs) : 
+    st.header(f"Gérer les {nom_classe}")
     donnees_brutes = selectionner_donnees(nom_classe)
     liste_donnees = []
     
     # Créer le DataFrame
     for donnee in donnees_brutes :
-        dict_donnee = {champ: getattr(donnee, champ) for champ in liste_champs}
-        liste_donnees.append(dict_donnee)
+        dict_connee = {f"{champ}" : donnee.champ for champ in liste_champs}
+        liste_donnees.append(dict_connee)
+        
     df_donnees = pd.DataFrame(liste_donnees)   
-    st.dataframe(df_donnees, hide_index=True, width=1200, height=300)    
-
+    st.dataframe(df_donnees, hide_index=True, width=1200, height=300)
     if nom_classe == Cours : 
         fonction_format = lambda x: f"{df_donnees.loc[x, 'sport']} {df_donnees.loc[x, 'horaire']}"
     elif nom_classe == Coach : 
@@ -134,15 +105,15 @@ def gestion(nom_classe, liste_champs) :
     elif nom_classe == Inscription : 
         fonction_format = lambda x: f"{df_donnees.loc[x, 'id_membre']} {df_donnees.loc[x, 'id_cours']} {df_donnees.loc[x, 'date_inscription']}"
     elif nom_classe == Membre : 
-        fonction_format = lambda x: f"{df_donnees.loc[x, 'prenom']} {df_donnees.loc[x, 'nom']}  |  téléphone : {df_donnees.loc[x, 'telephone']}"
+        fonction_format = lambda x: f"{df_donnees.loc[x, 'prenom']} {df_donnees.loc[x, 'nom']} {df_donnees.loc[x, 'telephone']}"
         
     index_selection_donnee = st.selectbox(
-        f"Sélectionnez un(e) {nom_classe.__str__()} à modifier ou supprimer :",df_donnees.index,format_func=fonction_format)
+        f"Sélectionnez un(e) {nom_classe.lower()} à modifier ou supprimer :",df_donnees.index,format_func=fonction_format)
     
     db_index_donnee = int(df_donnees.loc[index_selection_donnee, 'id'])
     
     if db_index_donnee is not None and db_index_donnee is not None:
-        # st.write(f"Vous avez sélectionné le cours : {df_donnees.loc[db_index_donnee, 'sport']} à {df_donnees.loc[db_index_donnee, 'horaire']}")
+        st.write(f"Vous avez sélectionné le cours : {df_donnees.loc[db_index_donnee, 'sport']} à {df_donnees.loc[db_index_donnee, 'horaire']}")
         col1, col2, col3 = st.columns(3)
         
         # bouton ajouter
@@ -158,7 +129,7 @@ def gestion(nom_classe, liste_champs) :
                 st.rerun()
             elif nouvelles_donnees is not None :
                 inserer_donnees(nouvelles_donnees, nom_classe)
-                st.success(f"{nom_classe} ajouté(e) avec succès")
+                st.success(f"{nom_classe.lower()} ajouté(e) avec succès")
                 st.session_state.afficher_form_ajout = False
                 time.sleep(2)
                 st.rerun()
@@ -185,30 +156,4 @@ def gestion(nom_classe, liste_champs) :
                 st.rerun()
 
         with col3:
-            supprimer_entree(nom_classe, db_index_donnee)
-
-
-##########################################################################################
-
-choix = ("Accueil", "Gérer les coachs", "Gérer les cours", "Gérer les inscriptions", "Gérer Membres")
-with st.sidebar : 
-    add_radio = st.radio("Faites un choix : ", choix)
-
-if add_radio == "Accueil" : 
-    accueil()
-
-elif add_radio == "Gérer les coachs" :
-    liste_champs = ["id", "prenom", "nom", "sport", "genre", "date_naissance", "email", "telephone"]
-    gestion(Coach, liste_champs)
-
-elif add_radio == "Gérer les cours" : 
-    liste_champs = ["id", "sport", "horaire", "capacite_max", "nombre_inscrits", "coach_id"]
-    gestion(Cours, liste_champs)
-
-elif add_radio == "Gérer les inscriptions" : 
-    liste_champs = ["id", "id_membre", "id_cours", "date_inscription"]
-    gestion(Inscription, liste_champs)
-    
-elif add_radio == "Gérer Membres" : 
-    liste_champs = ["id", "prenom", "nom", "genre", "date_naissance", "email", "telephone", "id_carteAcces"]
-    gestion(Membre, liste_champs)
+            supprimer_entree(df_donnees, index_selection_donnee, db_index_donnee)

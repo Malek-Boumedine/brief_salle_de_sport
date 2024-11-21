@@ -18,6 +18,9 @@ class Membre(SQLModel, table=True):
     id_carteAcces : int | None = Field(default=None, foreign_key="carteacces.id", ondelete="CASCADE", unique=True)
     inscriptions: List["Inscription"] = Relationship(back_populates="membre")
 
+    def __str__ () : 
+        return "membre"
+    
     @field_validator("genre")
     @classmethod
     def valider_genre(cls, valeur) : 
@@ -45,6 +48,10 @@ class CarteAcces(SQLModel, table=True):
         if valeur is None or not valeur : 
             raise ValueError("le 'numero_unique' ne doit pas être vide")
         return valeur
+    
+    def __str__ () : 
+        return "carte d'accès"
+
 
 
 ##########################################################################################
@@ -58,6 +65,10 @@ class Coach(SQLModel, table=True):
     date_naissance : date | None = Field(default=None, nullable=False)
     email : str | None = Field(default=None, nullable=False, unique=True)
     telephone : str | None = Field(default=None, nullable=False, unique=True)
+    
+    def __str__ () : 
+        return "coach"
+
 
 
 ##########################################################################################
@@ -70,7 +81,12 @@ class Cours(SQLModel, table=True):
     nombre_inscrits : int | None = Field(nullable=False)
     coach_id : int | None = Field(default=None, foreign_key="coach.id")
     inscriptions: List["Inscription"] = Relationship(back_populates="cours")
+    
+    def __str__ () : 
+        return "cours"
 
+
+# @field_validator
 
 ##########################################################################################
 
@@ -81,6 +97,9 @@ class Inscription(SQLModel, table=True):
     date_inscription : date | None = Field(nullable=False)
     membre: Membre = Relationship(back_populates="inscriptions")
     cours: Cours = Relationship(back_populates="inscriptions")
+    
+    def __str__ () : 
+        return "inscription"
 
 
 ##########################################################################################

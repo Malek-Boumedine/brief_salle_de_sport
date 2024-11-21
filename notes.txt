@@ -1,0 +1,31 @@
+Membre
+
+Consulter les cours disponibles.        
+        -> select 
+S'inscrire à un cours (vérification des places restantes et des conflits d'horaires).
+        -> insert
+
+Annuler une inscription.
+        -> delete
+
+Consulter l’historique des inscriptions.
+        -> select
+
+
+Admin
+
+Gérer les coachs (ajouter, modifier, supprimer).
+        -> insert
+        -> update
+        -> delete
+
+Gérer les cours (ajouter, modifier, supprimer).
+        -> insert
+        -> update
+        -> delete
+
+Voir les membres inscrits à chaque cours.
+        -> select
+
+Annuler une inscription ou un cours.
+        -> delete
