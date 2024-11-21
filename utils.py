@@ -66,6 +66,7 @@ def supprimer_donnee(nom_classe, identifiant):
 
 ############################################################################################################
 
+selectionner_donnees(Cours)
 
 if __name__ == "__main__" : 
     
