@@ -1,8 +1,14 @@
-from sqlmodel import Field, SQLModel, create_engine, Relationship
+from sqlmodel import Field, SQLModel, create_engine, Relationship, Session, select
 from pydantic import EmailStr, ValidationError, field_validator
 from pydantic_extra_types.phone_numbers import PhoneNumber
 from datetime import date, datetime
 from typing import List, Optional
+
+
+sqlite_file_name = "salle_de_sport.db"
+sqlite_url = f"sqlite:///{sqlite_file_name}"
+
+engine = create_engine(sqlite_url, echo=True)
 
 
 
@@ -41,6 +47,7 @@ class Membre(SQLModel, table=True):
 class CarteAcces(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     numero_unique : int | None = Field(default=None, nullable=False, unique=True)
+    # membre : Membre = Relationship(back_populates="membre")
     
     @field_validator("numero_unique")
     @classmethod
@@ -76,7 +83,7 @@ class Coach(SQLModel, table=True):
 class Cours(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     sport : str | None
-    horaire : datetime | None = Field(nullable=False)
+    horaire : datetime | None = Field(nullable=False, unique=True)
     capacite_max : int | None = Field(nullable=False)
     nombre_inscrits : int | None = Field(nullable=False)
     coach_id : int | None = Field(default=None, foreign_key="coach.id")
@@ -86,7 +93,13 @@ class Cours(SQLModel, table=True):
         return "cours"
 
 
-# @field_validator
+    @field_validator("horaire")
+    def cours_unique(cls, valeur) : 
+        with Session(engine) as session :
+            horaires = session.exec(select(Cours.horaire).all())
+            if valeur in horaires : 
+                raise ValueError("Cet horaire est déja pris")
+        return valeur
 
 ##########################################################################################
 

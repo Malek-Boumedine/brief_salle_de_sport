@@ -1,57 +1,50 @@
 from faker import Faker
+from sqlmodel import Session, select
+from init_db import engine
 import random
 from datetime import datetime
-from models import Coach
+from models import *
 
 fake = Faker('fr_FR')  
 
 
 ########################################################################
 
-def creer_personne(liste_cartes : list):
-    genre = random.choice(["Masculin", "Feminin"])
-    if genre == "Masculin":
-        prenom = fake.first_name_male()
-        nom = fake.last_name_male()
-    else:
-        prenom = fake.first_name_female()
-        nom = fake.last_name_female()
-    date_naissance = fake.date_of_birth(minimum_age=18, maximum_age=80)
-    email = f"{prenom.lower()}.{nom.lower()}@{fake.free_email_domain()}"
-    telephone = fake.phone_number()
-    id_carteAcces = random.choice(liste_cartes)
-    liste_cartes.remove(id_carteAcces)
+def creer_personne():
+    with Session(engine) as session:
+        while True:
+            numero_unique = random.randint(10000, 99999)
+            carte_existante = session.exec(select(CarteAcces).where(CarteAcces.numero_unique == numero_unique)
+            ).first()
+            if not carte_existante:
+                break
+        # Créer et sauvegarder la carte d'accès
+        carte = CarteAcces(numero_unique=numero_unique)
+        session.add(carte)
 
-    return {
-        "prenom": prenom,
-        "nom": nom,
-        "genre": genre,
-        "date_naissance": date_naissance,
-        "email": email,
-        "telephone": telephone,
-        "id_carteAcces" : id_carteAcces
-    }
+        # Générer les données de la personne
+        genre = random.choice(["Masculin", "Feminin"])
+        if genre == "Masculin":
+            prenom = fake.first_name_male()
+            nom = fake.last_name_male()
+        else:
+            prenom = fake.first_name_female()
+            nom = fake.last_name_female()
 
+        date_naissance = fake.date_of_birth(minimum_age=18, maximum_age=80)
+        email = f"{prenom.lower()}.{nom.lower()}@{fake.free_email_domain()}"
+        telephone = fake.phone_number()
 
-########################################################################
+        return {
+            "prenom": prenom,
+            "nom": nom,
+            "genre": genre,
+            "date_naissance": date_naissance,
+            "email": email,
+            "telephone": telephone,
+            "id_carteAcces": carte.id
+        }
 
-def creer_carte_acces (): 
-    numero_unique = fake.unique.random_int(min=10000, max=99999)
-    
-    return {
-    "numero_unique": numero_unique,
-    }
-
-def liste_cartes_uniques(nombre_cartes : int) -> tuple[list[dict | int]] : 
-    liste_nums = []
-    for _ in range(nombre_cartes) :
-        numero_unique = fake.unique.random_int(min=10000, max=99999)
-        liste_nums.append(numero_unique)
-    nums_uniques = list(set(liste_nums))
-    liste_cartes = [{"numero_unique" : num} for num in nums_uniques]
-    
-    return nums_uniques, liste_cartes
-    
 
 ########################################################################
 
