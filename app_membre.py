@@ -7,11 +7,22 @@ from utils import *
 connection = sqlite3.connect("salle_de_sport.db") 
 cursor = connection.cursor()
 
-st.sidebar.title("Menu principal")
-choix = st.sidebar.radio("Choisissez une rubrique :", ["Consulter les cours disponibles", "Consulter l'historique des inscriptions", "S'inscrire à un cours", "Annuler une inscription"])
+st.sidebar.title("🎯 Menu principal")
+choix = st.sidebar.radio(
+    "Choisissez une rubrique :",
+    [
+        "📚 Consulter les cours disponibles",
+        "✍️ S'inscrire à un cours",
+        "🕒 Consulter l'historique des inscriptions",
+        "❌ Annuler une inscription"
+    ]
+)
+
+# st.sidebar.title("Menu principal")
+# choix = st.sidebar.radio("Choisissez une rubrique :", ["Consulter les cours disponibles", "Consulter l'historique des inscriptions", "S'inscrire à un cours", "Annuler une inscription"])
 
 def display():
-    if choix == "Consulter les cours disponibles":
+    if choix == "📚 Consulter les cours disponibles":
 
         query = """
         SELECT capacite_max, id, coach_id, sport, horaire, nombre_inscrits
@@ -41,7 +52,7 @@ def display():
             col5.write(nombre_inscrits)
             col6.write(capacite_max)
 
-    elif choix == "S'inscrire à un cours" : 
+    elif choix == "✍️ S'inscrire à un cours" : 
 
         # requete liste des cours
         query = """
@@ -105,7 +116,7 @@ def display():
                 st.success(f"Cours {id_} sélectionné !")
                 st.rerun()  
 
-    elif choix == "Consulter l'historique des inscriptions":
+    elif choix == "🕒 Consulter l'historique des inscriptions":
 
         st.title("Consulter l'historique des inscriptions")
 
@@ -131,7 +142,7 @@ def display():
             else:
                 st.write("Aucun cours trouvé pour cet identifiant.")
 
-    elif choix == "Annuler une inscription":
+    elif choix == "❌ Annuler une inscription" :
 
         st.title("Annuler une inscription")
 
