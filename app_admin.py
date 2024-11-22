@@ -3,59 +3,71 @@ import streamlit as st
 from utils import *
 import pandas as pd
 import time
+from datetime import datetime, timedelta
 
-
-def nouveau_form(args) : 
-    with st.form("nouveau_form"):
-        valeurs = {}
-        # champs = args
-        for champ in args:
-            if champ.lower() == "id":
-                continue
-            elif champ.lower() == "genre":
-                index_genre = st.radio(champ, ["Masculin", "Feminin"])
-                valeurs[champ] = "Masculin" if index_genre == "Masculin" else "Feminin"
-            elif champ.lower() in ["date_naissance", "horaire"]:
-                valeurs[champ] = st.date_input(champ)
-            else:
-                valeurs[champ] = st.text_input(champ)
-
-        col1, col2 = st.columns(2)
-        with col1:
-            ajouter = st.form_submit_button("Ajouter")
-        with col2:
-            annuler = st.form_submit_button("Annuler")
-
-        if annuler:
-            return "annuler"
-        elif ajouter:
-            return valeurs
-    return None
 
 
 ######################################################################
 
-def modifier_form(coach_data):
-    with st.form("modifier_form"):
+from datetime import timedelta
+
+def formulaire(coach_data, nom_classe=None):
+    with st.form(key="formulaire"):
         valeurs = {}
-        # champs = [champ for champ in coach_data.keys()]
-        for champ in coach_data.keys():
-            if champ.lower() == "id":
+        champs = list(coach_data.keys()) if isinstance(coach_data, dict) else coach_data
+        
+        for champ in champs:
+            if champ.lower() in ["id", "coach_id", "id_carteacces"]:
                 continue
+            
+            elif nom_classe == Inscription:
+                if champ.lower() == "id_membre":
+                    membres = afficher_membres()
+                    membres_options = [{"id": m.id, "nom": f"{m.prenom} {m.nom}"} for m in membres]
+                    membre_selectionne = st.selectbox("Sélectionnez un membre", options=membres_options, format_func=lambda x: x["nom"])
+                    valeurs[champ] = membre_selectionne["id"]
+                elif champ.lower() == "id_cours":
+                    cours = afficher_cours()
+                    cours_options = [{"id": c.id,"sport": c.sport,"horaire": c.horaire} for c in cours]
+                    cours_selectionne = st.selectbox("Sélectionnez un cours", options=cours_options, format_func=lambda x: f"{x['sport']} - {x['horaire'].strftime('%d/%m/%Y %H:%M')}")
+                    valeurs[champ] = cours_selectionne["id"]
+                valeurs["date_inscription"] = datetime.now().date()
+          
             elif champ.lower() == "genre":
-                index = 0 if coach_data[champ] == "Masculin" else 1
-                index_genre = st.radio(champ, ["Masculin", "Feminin"], index=index)
-                valeurs[champ] = "Masculin" if index_genre else "Feminin"
+                if isinstance(coach_data, dict):
+                    index = 0 if coach_data[champ] == "Masculin" else 1
+                index_genre = st.radio(champ, ["Masculin", "Feminin"], 
+                    index=index if isinstance(coach_data, dict) else 0)
+                valeurs[champ] = index_genre
+                
             elif champ.lower() == "date_naissance":
-                valeurs[champ] = st.date_input(champ, value=coach_data[champ])
+                valeurs[champ] = st.date_input(champ, 
+                    value=coach_data[champ] if isinstance(coach_data, dict) else None)
+            
+            elif champ.lower() == "coach":
+                coachs = afficher_coachs()
+                coach_selectionne = st.selectbox("Sélectionnez un coach", options=coachs, format_func=lambda x: x["nom"])
+                valeurs["coach_id"] = coach_selectionne["id"]
+
             elif champ.lower() == "horaire":
-                valeurs[champ] = st.date_input(champ)
+                col1, col2 = st.columns(2)
+                with col1:
+                    date = st.date_input(f"{champ} (date)", 
+                        value=coach_data[champ].date() if isinstance(coach_data, dict) else None)
+                with col2:
+                    heure = st.time_input(f"{champ} (heure - de 9h à 16h (la salle ferme à 17h) )", 
+                        value=coach_data[champ].time() if isinstance(coach_data, dict) else None, 
+                        step=timedelta(hours=1))
+                if date is not None and heure is not None :
+                    valeurs[champ] = datetime.combine(date, heure)
+                
             else:
-                valeurs[champ] = st.text_input(f"{champ}", value=coach_data[champ])
+                valeurs[champ] = st.text_input(champ, 
+                    value=coach_data[champ] if isinstance(coach_data, dict) else None)
 
         col1, col2 = st.columns(2)
         with col1:
-            mettre_a_jour = st.form_submit_button("Mettre à jour")
+            mettre_a_jour = st.form_submit_button("Valider")
         with col2:
             annuler = st.form_submit_button("Annuler")
             
@@ -71,7 +83,7 @@ def supprimer_entree(nom_classe, db_index) :
     if 'boutons_confirmation' not in st.session_state:
         st.session_state.boutons_confirmation = False
     if st.button("Supprimer", key="bouton_suprimer"):
-        st.session_state.afficher_form_ajout = False
+        st.session_state.afficher_form = False
         st.session_state.afficher_form_modifier = False
         st.session_state.boutons_confirmation = True
     if st.session_state.boutons_confirmation:
@@ -91,8 +103,8 @@ def supprimer_entree(nom_classe, db_index) :
 
 ######################################################################
 
-if 'afficher_form_ajout' not in st.session_state:
-    st.session_state.afficher_form_ajout = False
+if 'afficher_form' not in st.session_state:
+    st.session_state.afficher_form = False
     
 if 'afficher_form_modifier' not in st.session_state:
     st.session_state.afficher_form_modifier = False
@@ -117,75 +129,105 @@ def accueil() :
 
 def gestion(nom_classe, liste_champs) : 
     st.header(f"Gérer les {nom_classe.__str__()}")
-    donnees_brutes = selectionner_donnees(nom_classe)
+    if nom_classe == Cours : 
+        donnees_brutes = afficher_cours()
+    elif nom_classe == Inscription : 
+        donnees_brutes = afficher_inscriptions()
+    else :
+        donnees_brutes = selectionner_donnees(nom_classe)
     liste_donnees = []
     
-    # Créer le DataFrame
-    for donnee in donnees_brutes :
-        dict_donnee = {champ: getattr(donnee, champ) for champ in liste_champs}
-        liste_donnees.append(dict_donnee)
-    df_donnees = pd.DataFrame(liste_donnees)   
-    st.dataframe(df_donnees, hide_index=True, width=1200, height=300)    
+    if not donnees_brutes:
+        st.info(f"Aucune donnée disponible pour {nom_classe.__name__}")
+        # Créer un DataFrame vide 
+        df_donnees = pd.DataFrame(columns=liste_champs)
+    else : 
+        # Créer le DataFrame
+        for donnee in donnees_brutes :
+            dict_donnee = {champ: getattr(donnee, champ) for champ in liste_champs}
+            liste_donnees.append(dict_donnee)
+        df_donnees = pd.DataFrame(liste_donnees)   
+        st.dataframe(df_donnees, hide_index=True, width=1200, height=300)    
 
     if nom_classe == Cours : 
         fonction_format = lambda x: f"{df_donnees.loc[x, 'sport']} {df_donnees.loc[x, 'horaire']}"
     elif nom_classe == Coach : 
         fonction_format = lambda x: f"{df_donnees.loc[x, 'prenom']} {df_donnees.loc[x, 'nom']}"
     elif nom_classe == Inscription : 
-        fonction_format = lambda x: f"{df_donnees.loc[x, 'id_membre']} {df_donnees.loc[x, 'id_cours']} {df_donnees.loc[x, 'date_inscription']}"
+        fonction_format = lambda x: f"{df_donnees.loc[x, 'membre']} - {df_donnees.loc[x, 'cours']} - {df_donnees.loc[x, 'date_inscription']}"
     elif nom_classe == Membre : 
         fonction_format = lambda x: f"{df_donnees.loc[x, 'prenom']} {df_donnees.loc[x, 'nom']}  |  téléphone : {df_donnees.loc[x, 'telephone']}"
         
-    index_selection_donnee = st.selectbox(
-        f"Sélectionnez un(e) {nom_classe.__str__()} à modifier ou supprimer :",df_donnees.index,format_func=fonction_format)
-    
-    db_index_donnee = int(df_donnees.loc[index_selection_donnee, 'id'])
-    
-    if db_index_donnee is not None and db_index_donnee is not None:
-        # st.write(f"Vous avez sélectionné le cours : {df_donnees.loc[db_index_donnee, 'sport']} à {df_donnees.loc[db_index_donnee, 'horaire']}")
-        col1, col2, col3 = st.columns(3)
-        
-        # bouton ajouter
-        with col1 :
-            if st.button("Ajouter", key="bouton_ajouter"):
-                st.session_state.afficher_form_ajout = True
-                st.session_state.afficher_form_modifier = False
-        if st.session_state.afficher_form_ajout:
-            nouvelles_donnees = nouveau_form(liste_champs)
+    if not donnees_brutes :
+        if st.button("Ajouter", key="bouton_ajouter"):
+            st.session_state.afficher_form = True
+            st.session_state.afficher_form_modifier = False
+        if st.session_state.afficher_form:
+            nouvelles_donnees = formulaire(liste_champs,nom_classe)
             
             if nouvelles_donnees  == "annuler" :
-                st.session_state.afficher_form_ajout = False
+                st.session_state.afficher_form = False
                 st.rerun()
             elif nouvelles_donnees is not None :
                 inserer_donnees(nouvelles_donnees, nom_classe)
-                st.success(f"{nom_classe} ajouté(e) avec succès")
-                st.session_state.afficher_form_ajout = False
+                st.success(f"{nom_classe.__str__()} ajouté(e) avec succès")
+                st.session_state.afficher_form = False
                 time.sleep(2)
                 st.rerun()
+
+    elif donnees_brutes :
+        index_selection_donnee = st.selectbox(f"Sélectionnez un(e) {nom_classe.__str__()} à supprimer :",df_donnees.index,format_func=fonction_format)
+        
+        db_index_donnee = int(df_donnees.loc[index_selection_donnee, 'id'])
+        
+        if db_index_donnee is not None and db_index_donnee is not None :
+            # if nom_classe == Inscription : 
+            #     supprimer_entree(nom_classe, db_index_donnee)
+            # else :
+            col1, col2, col3 = st.columns(3)
+        
+        # bouton ajouter
+            with col1 :
+                if st.button("Ajouter", key="bouton_ajouter"):
+                    st.session_state.afficher_form = True
+                    st.session_state.afficher_form_modifier = False
+            if st.session_state.afficher_form:
+                nouvelles_donnees = formulaire(liste_champs,nom_classe)
                 
-        # bouton de modification
-        with col2:
-            if st.button("Modifier", key="bouton_modifier"):
-                st.session_state.afficher_form_modifier = True
-                st.session_state.afficher_form_ajout = False
+                if nouvelles_donnees  == "annuler" :
+                    st.session_state.afficher_form = False
+                    st.rerun()
+                elif nouvelles_donnees is not None :
+                    inserer_donnees(nouvelles_donnees, nom_classe)
+                    st.success(f"{nom_classe.__str__()} ajouté(e) avec succès")
+                    st.session_state.afficher_form = False
+                    time.sleep(2)
+                    st.rerun()
+                    
+            # bouton de modification
+            with col2:
+                if st.button("Modifier", key="bouton_modifier"):
+                    st.session_state.afficher_form_modifier = True
+                    st.session_state.afficher_form_ajout = False
 
-        if st.session_state.afficher_form_modifier:
-            coach_data = df_donnees.loc[index_selection_donnee].to_dict()
-            coach_modifs = modifier_form(coach_data)
-  
-            if coach_modifs == "annuler" :
-                st.session_state.afficher_form_modifier = False
-                st.rerun()
-            elif coach_modifs is not None:
-                for champ, nouvelle_valeur in coach_modifs.items():
-                    modifier_donnee(Cours, db_index_donnee, champ, nouvelle_valeur)
-                st.success("Coach modifié avec succès")
-                time.sleep(2)
-                st.session_state.afficher_form_modifier = False
-                st.rerun()
+            if st.session_state.afficher_form_modifier:
+                modif_data = df_donnees.loc[index_selection_donnee].to_dict()
+                coach_modifs = formulaire(modif_data,nom_classe)
+    
+                if coach_modifs == "annuler" :
+                    st.session_state.afficher_form_modifier = False
+                    st.rerun()
+                elif coach_modifs is not None:
+                    for champ, nouvelle_valeur in coach_modifs.items():
+                        if champ != 'id':  # On ne modifie pas l'id
+                            modifier_donnee(nom_classe, db_index_donnee, champ, nouvelle_valeur)
+                    st.success("Coach modifié avec succès")
+                    time.sleep(2)
+                    st.session_state.afficher_form_modifier = False
+                    st.rerun()
 
-        with col3:
-            supprimer_entree(nom_classe, db_index_donnee)
+            with col3:
+                supprimer_entree(nom_classe, db_index_donnee)
 
 
 ##########################################################################################
@@ -202,11 +244,11 @@ elif add_radio == "Gérer les coachs" :
     gestion(Coach, liste_champs)
 
 elif add_radio == "Gérer les cours" : 
-    liste_champs = ["id", "sport", "horaire", "capacite_max", "nombre_inscrits", "coach_id"]
+    liste_champs = ["id", "sport", "horaire", "capacite_max", "nombre_inscrits", "coach_id", "coach"]
     gestion(Cours, liste_champs)
 
 elif add_radio == "Gérer les inscriptions" : 
-    liste_champs = ["id", "id_membre", "id_cours", "date_inscription"]
+    liste_champs = ["id", "id_membre", "membre","id_cours", "cours", "date_inscription"]
     gestion(Inscription, liste_champs)
     
 elif add_radio == "Gérer Membres" : 
