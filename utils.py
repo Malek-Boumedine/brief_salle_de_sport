@@ -108,8 +108,4 @@ if __name__ == "__main__" :
     for _ in range(nombre_cours, nombre_membres) : 
         inscription = creer_inscription(nombre_cours, nombre_membres)
         inserer_donnees(inscription, Inscription)
-        
-    for i in selectionner_donnees(Inscription) :
-        print(i)
-
-    # supprimer_donnee(Coach, 1)
+    

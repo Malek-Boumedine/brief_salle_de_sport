@@ -2,7 +2,6 @@ from faker import Faker
 import random
 from datetime import datetime
 from models import Coach
-import radar
 
 fake = Faker('fr_FR')  
 

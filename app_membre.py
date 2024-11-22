@@ -62,7 +62,7 @@ def display():
         cursor.execute(query_membres)
         rows2 = cursor.fetchall()
         membre_a_ajouter = st.selectbox("choisissez un membre", rows2)
-        
+        id_membre = membre_a_ajouter[0]
 
         st.title("S'inscrire à un cours")
 
@@ -87,15 +87,14 @@ def display():
             col6.write(nombre_inscrits)
             if col7.button("Choisir", key=f"button_{id_}"):
                 query_inscription = """
-                INSERT INTO Inscription 
-                (id)
-                VALUES (%s)
+                INSERT INTO Inscription (id_membre, id_cours, date_inscription)
+                VALUES (?, ?, ?)
                 """
-                cursor.execute(query_inscription, (id_,))
 
-
+                cursor.execute(query_inscription, (id_,id_membre, datetime.now().date()))
 
                 st.success(f"Cours {id_} sélectionné !")
+
     
     elif choix == "Consulter l'historique des inscriptions":
 
