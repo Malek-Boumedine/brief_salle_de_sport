@@ -9,18 +9,17 @@ from datetime import datetime, timedelta
 
 ######################################################################
 
-from datetime import timedelta
-
 def formulaire(coach_data, nom_classe=None):
     with st.form(key="formulaire"):
         valeurs = {}
         champs = list(coach_data.keys()) if isinstance(coach_data, dict) else coach_data
-        
+
         for champ in champs:
             if champ.lower() in ["id", "coach_id", "id_carteacces"]:
                 continue
-            
-            elif nom_classe == Inscription:
+
+            # Gestion spéciale pour Inscription
+            if nom_classe == Inscription:
                 if champ.lower() == "id_membre":
                     membres = afficher_membres()
                     membres_options = [{"id": m.id, "nom": f"{m.prenom} {m.nom}"} for m in membres]
@@ -32,18 +31,20 @@ def formulaire(coach_data, nom_classe=None):
                     cours_selectionne = st.selectbox("Sélectionnez un cours", options=cours_options, format_func=lambda x: f"{x['sport']} - {x['horaire'].strftime('%d/%m/%Y %H:%M')}")
                     valeurs[champ] = cours_selectionne["id"]
                 valeurs["date_inscription"] = datetime.now().date()
-          
-            elif champ.lower() == "genre":
+                continue  # Passe au champ suivant
+
+            # Gestion des champs standards
+            if champ.lower() == "genre":
                 if isinstance(coach_data, dict):
                     index = 0 if coach_data[champ] == "Masculin" else 1
                 index_genre = st.radio(champ, ["Masculin", "Feminin"], 
                     index=index if isinstance(coach_data, dict) else 0)
                 valeurs[champ] = index_genre
-                
+
             elif champ.lower() == "date_naissance":
                 valeurs[champ] = st.date_input(champ, 
                     value=coach_data[champ] if isinstance(coach_data, dict) else None)
-            
+
             elif champ.lower() == "coach":
                 coachs = afficher_coachs()
                 coach_selectionne = st.selectbox("Sélectionnez un coach", options=coachs, format_func=lambda x: x["nom"])
@@ -58,9 +59,9 @@ def formulaire(coach_data, nom_classe=None):
                     heure = st.time_input(f"{champ} (heure - de 9h à 16h (la salle ferme à 17h) )", 
                         value=coach_data[champ].time() if isinstance(coach_data, dict) else None, 
                         step=timedelta(hours=1))
-                if date is not None and heure is not None :
+                if date is not None and heure is not None:
                     valeurs[champ] = datetime.combine(date, heure)
-                
+
             else:
                 valeurs[champ] = st.text_input(champ, 
                     value=coach_data[champ] if isinstance(coach_data, dict) else None)
@@ -70,11 +71,26 @@ def formulaire(coach_data, nom_classe=None):
             mettre_a_jour = st.form_submit_button("Valider")
         with col2:
             annuler = st.form_submit_button("Annuler")
-            
+
         if annuler:
             return "annuler"
         elif mettre_a_jour:
-            return valeurs
+            if isinstance(coach_data, dict) and "id" in coach_data:  # Si c'est une modification
+                identifiant = coach_data["id"]
+                for champ, valeur in valeurs.items():
+                    if champ != "id":  # ne pas modifier l'ID
+                        resultat = modifier_donnee(nom_classe, identifiant, champ, valeur)
+                        if not resultat:
+                            st.error(f"Erreur lors de la modification du champ {champ}")
+                            return None
+                return valeurs
+            else:  # Si c'est une création
+                if nom_classe == Cours:  # Vérifications spéciales pour les cours
+                    resultat = inserer_donnees(valeurs, nom_classe)
+                    if resultat is not None:  # Si une erreur est retournée
+                        st.warning(str(resultat))
+                        return None
+                return valeurs
     return None
 
 ######################################################################
@@ -181,9 +197,6 @@ def gestion(nom_classe, liste_champs) :
         db_index_donnee = int(df_donnees.loc[index_selection_donnee, 'id'])
         
         if db_index_donnee is not None and db_index_donnee is not None :
-            # if nom_classe == Inscription : 
-            #     supprimer_entree(nom_classe, db_index_donnee)
-            # else :
             col1, col2, col3 = st.columns(3)
         
         # bouton ajouter
@@ -221,7 +234,7 @@ def gestion(nom_classe, liste_champs) :
                     for champ, nouvelle_valeur in coach_modifs.items():
                         if champ != 'id':  # On ne modifie pas l'id
                             modifier_donnee(nom_classe, db_index_donnee, champ, nouvelle_valeur)
-                    st.success("Coach modifié avec succès")
+                    st.success("Modification réussie")
                     time.sleep(2)
                     st.session_state.afficher_form_modifier = False
                     st.rerun()

@@ -2,8 +2,14 @@ from sqlmodel import Session, select
 from init_db import engine, init_db
 from populate_db import *
 from models import *
+from datetime import datetime, timedelta, time
 
 
+def erreur1() : 
+    return ValueError("Ce créneau est déja pris !")
+
+def erreur2() : 
+    return ValueError("Veuilez choisir un créneau de 9h à 16h (le dernier cours commence à 16h et se termine à 17h) !")    
 
 init_db()
 
@@ -25,7 +31,6 @@ def afficher_membres() :
         membres = session.exec(select(Membre.id, Membre.prenom, Membre.nom)).all()
         return membres
 
-    
 def afficher_coachs() : 
     with Session(engine) as session:  
         requete = select(Coach.id, (Coach.prenom + " " + Coach.nom).label("coach"))
@@ -55,10 +60,31 @@ def inserer_donnees(donnees : dict, nom_classe : type[SQLModel]) -> None:
             instance = nom_classe(**donnees)
             session.add(instance)
             session.commit()
+            
         elif nom_classe == Cours : 
             horaires = session.exec(select(Cours.horaire)).all()
             if donnees["horaire"] in horaires : 
-                raise ValueError("Ce créneau est déja pris !")
+                return erreur1()
+
+            # Vérification de l'heure
+            heure_cours = donnees["horaire"].time()  # Extrait l'heure du datetime
+            heure_min = time(9, 0)
+            heure_max = time(16, 0)
+
+            if heure_cours < heure_min or heure_cours > heure_max:
+                return erreur2()
+
+            # Si pas d'erreur, créer l'instance
+            instance = nom_classe(**donnees)
+            session.add(instance)
+            session.commit()    
+            heure_cours = donnees["horaire"].time()
+            heure_min = time(9, 0)
+            heure_max = time(16, 0)
+            
+            if heure_cours < heure_min or heure_cours > heure_max:
+                return erreur2()
+    return None
             
         
 def modifier_donnee(nom_classe, identifiant, colonne_a_modifier, nouvelle_valeur):
