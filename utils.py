@@ -86,20 +86,32 @@ def inserer_donnees(donnees : dict, nom_classe : type[SQLModel]) -> None:
                 return erreur2()
     return None
             
-        
+
 def modifier_donnee(nom_classe, identifiant, colonne_a_modifier, nouvelle_valeur):
     with Session(engine) as session:
         statement = select(nom_classe).where(getattr(nom_classe, "id") == identifiant)
         resultats = session.exec(statement)
         r1 = resultats.one_or_none()
-
         if r1:
+            # Vérification spéciale pour les cours et l'horaire
+            if nom_classe == Cours and colonne_a_modifier == "horaire":
+                # Sélectionner tous les horaires sauf celui du cours actuel
+                horaires = session.exec(select(Cours.horaire).where(Cours.id != identifiant)).all()
+                # Vérifier si le nouvel horaire existe déjà
+                if nouvelle_valeur in horaires:
+                    return erreur1()
+                # Vérifier si l'horaire est dans les plages autorisées
+                heure = nouvelle_valeur.time()
+                if heure < time(9, 0) or heure > time(16, 0):
+                    return erreur2()
+            # Si pas d'erreur, procéder à la modification
             setattr(r1, colonne_a_modifier, nouvelle_valeur)
             session.add(r1)
             session.commit()
             session.refresh(r1)
             return True
         return False
+
 
 def supprimer_donnee(nom_classe, identifiant):
     with Session(engine) as session:
