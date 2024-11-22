@@ -146,4 +146,4 @@ if __name__ == "__main__" :
     for _ in range(nombre_inscriptions) : 
         inscription = creer_inscription(nombre_cours, nombre_membres)
         inserer_donnees(inscription, Inscription)
-        
+
