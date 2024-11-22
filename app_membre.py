@@ -4,17 +4,11 @@ from sqlmodel import Field, Session, SQLModel, create_engine, select
 from sqlalchemy import select, engine
 from utils import *
 
-
 connection = sqlite3.connect("salle_de_sport.db") 
 cursor = connection.cursor()
 
-
-
 st.sidebar.title("Menu principal")
-choix = st.sidebar.radio("Choisissez une rubrique :", ["Consulter les cours disponibles", "S'inscrire à un cours", "Consulter l'historique des inscriptions", "Annuler une inscription"])
-
-
-
+choix = st.sidebar.radio("Choisissez une rubrique :", ["Consulter les cours disponibles", "Consulter l'historique des inscriptions", "S'inscrire à un cours", "Annuler une inscription"])
 
 def display():
     if choix == "Consulter les cours disponibles":
@@ -29,23 +23,23 @@ def display():
         st.title("Cours disponibles")
 
         col1, col2, col3, col4, col5, col6 = st.columns(6)
-        col1.write("Capacité Max")
-        col2.write("ID")
-        col3.write("Coach ID")
-        col4.write("Sport")
-        col5.write("Horaire")
-        col6.write("Nombre Inscrits")
 
-        
+        col1.write("🆔 \n ##### ID")
+        col2.write("👩‍🏫 \n ##### Coach ID")
+        col3.write("🏅 \n ##### Sport")
+        col4.write("⏰ \n ##### Horaires")
+        col5.write("👥 \n ##### Nombre d'inscrits")
+        col6.write ("🏋️ \n  ##### Capacité Max")
+
         for row in rows:
             capacite_max, id_, coach_id, sport, horaire, nombre_inscrits = row
             col1, col2, col3, col4, col5, col6 = st.columns(6)
-            col1.write(capacite_max)
-            col2.write(id_)
-            col3.write(coach_id)
-            col4.write(sport)
-            col5.write(horaire)
-            col6.write(nombre_inscrits)
+            col1.write(id_) 
+            col2.write(coach_id)
+            col3.write(sport)
+            col4.write(horaire)
+            col5.write(nombre_inscrits)
+            col6.write(capacite_max)
 
     elif choix == "S'inscrire à un cours" : 
 
@@ -67,17 +61,18 @@ def display():
         membre_a_ajouter = st.selectbox("choisissez un membre", rows2)
         id_membre = membre_a_ajouter[0]
 
-
         # affichage colonne et titre
         st.title("S'inscrire à un cours")
+
         col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
-        col1.write("Capacité Max")
-        col2.write("ID")
-        col3.write("Coach ID")
-        col4.write("Sport")
-        col5.write("Horaire")
-        col6.write("Nombre Inscrits")
-        col7.write("Choisir un cours")
+
+        col1.write("🆔 \n ##### ID")
+        col2.write("👩‍🏫 \n ##### Coach ID")
+        col3.write("🏅 \n ##### Sport")
+        col4.write("⏰ \n ##### Horaires")
+        col5.write("👥 \n ##### Nombre d'inscrits")
+        col6.write ("🏋️ \n  ##### Capacité Max")
+        col7.write("🎯 \n ##### Choisir un cours")
 
         for row in rows:
             capacite_max, id_, coach_id, sport, horaire, nombre_inscrits = row
@@ -109,34 +104,6 @@ def display():
                 
                 st.success(f"Cours {id_} sélectionné !")
                 st.rerun()  
-
-
-        # for row in rows:
-        #     capacite_max, id_, coach_id, sport, horaire, nombre_inscrits = row
-        #     col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
-        #     col1.write(capacite_max)
-        #     col2.write(id_)
-        #     col3.write(coach_id)
-        #     col4.write(sport)
-        #     col5.write(horaire)
-        #     col6.write(nombre_inscrits)
-        #     if col7.button("Choisir", key=f"button_{id_}"):
-        #         query_inscription = """
-        #         INSERT INTO Inscription (id_membre, id_cours, date_inscription)
-        #         VALUES (?, ?, ?)
-        #         """
-
-        #         cursor.execute(query_inscription, (id_,id_membre, datetime.now().date()))
-        #         connection.commit()
-
-        #         st.success(f"Cours {id_} sélectionné !")
-        #         query_nb_inscrit = """
-        #         UPDATE Cours 
-        #         SET nombre_inscrits = nombre_inscrits + 1
-            
-        #         """
-        #         cursor.execute(query_nb_inscrit)
-        #         connection.commit()
 
     elif choix == "Consulter l'historique des inscriptions":
 
@@ -238,18 +205,6 @@ def display():
         #         cursor.execute(query_annulation, (id_saisi, cours_saisi))
         #         st.write("Vous avez bien été désinscrit du cours")
         #         connection.commit()
-
-
-
-
-
-
-            
-
-
-
-
-
 
 display()
 
