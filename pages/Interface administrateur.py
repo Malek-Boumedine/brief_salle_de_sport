@@ -33,7 +33,6 @@ def formulaire(coach_data, nom_classe=None):
                 valeurs["date_inscription"] = datetime.now().date()
                 continue  # Passe au champ suivant
 
-            # Gestion des champs standards
             if champ.lower() == "genre":
                 if isinstance(coach_data, dict):
                     index = 0 if coach_data[champ] == "Masculin" else 1
