@@ -88,12 +88,12 @@ def display():
         for row in rows:
             capacite_max, id_, coach_id, sport, horaire, nombre_inscrits = row
             col1, col2, col3, col4, col5, col6, col7 = st.columns(7)
-            col1.write(capacite_max)
-            col2.write(id_)
-            col3.write(coach_id)
-            col4.write(sport)
-            col5.write(horaire)
-            col6.write(nombre_inscrits)
+            col1.write(id_) 
+            col2.write(coach_id)
+            col3.write(sport)
+            col4.write(horaire)
+            col5.write(nombre_inscrits)
+            col6.write(capacite_max)
             
             # bouton choisir
             if col7.button("Choisir", key=f"button_{id_}"):
