@@ -147,7 +147,7 @@ if __name__ == "__main__" :
     
     
     # ################################
-    nombre_cours = 20
+    nombre_cours = 100
     for _ in range(nombre_coachs) : 
         cours = creer_cours(liste_coachs)
         inserer_donnees(cours, Cours)

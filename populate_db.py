@@ -77,7 +77,7 @@ def creer_coach(liste_sports):
 def creer_cours(liste_coachs : list["Coach"]):
 
     annee = 2024
-    mois = random.randint(1,12)
+    mois = random.randint(11,12)
     if mois in [1,3,5,7,8,10,12] : 
         jour = random.randint(1,31)
     elif mois in [4,6,9,11] : 
